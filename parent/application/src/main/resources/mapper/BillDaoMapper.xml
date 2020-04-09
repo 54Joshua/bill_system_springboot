@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hcb.newBilly.dao.BillDao">
+    <insert id="saveBill">
+        insert into bill (billId, inOutStatus, useFor, `sum`, remark, operator, createTime, updateTime, dataStatus, billTime)
+        values (#{billId},#{inOutStatus},#{useFor},#{sum},#{remark},#{operator},#{createTime},#{updateTime},1,#{billTime})
+    </insert>
+    <update id="updateBill">
+        update bill
+        <set>
+            <if test="inOutStatus != null and inOutStatus != ''">
+                inOutStatus=#{inOutStatus},
+            </if>
+            <if test="useFor != null and useFor != ''">
+                useFor=#{useFor},
+            </if>
+            <if test="sum != null ">
+                `sum`=#{sum},
+            </if>
+            <if test="remark != null and remark != ''">
+                remark=#{remark},
+            </if>
+            <if test="operator != null and operator != ''">
+                operator=#{operator},
+            </if>
+            <if test="updateTime != null ">
+                updateTime=#{updateTime},
+            </if>
+            <if test="billTime != null ">
+                billTime=#{billTime},
+            </if>
+        </set>
+        where billId=#{billId}
+    </update>
+    <update id="deleteBill">
+      update bill set dataStatus =3 where billId = #{billId}
+    </update>
+    <sql id="timeSql">
+        <choose>
+            <when test="billTimeType == 1">
+                and to_days(b.billTime) = to_days(now())
+            </when>
+            <when test="billTimeType == 2">
+                and to_days(now())-to_days(b.billTime) = 1
+            </when>
+            <when test="billTimeType == 3">
+                and YEARWEEK(date_format(billTime,'%Y-%m-%d')) = YEARWEEK(now())
+            </when>
+            <when test="billTimeType == 4">
+                and DATE_FORMAT( b.billTime,'%Y%m') = DATE_FORMAT( CURDATE(),'%Y%m')
+            </when>
+            <when test="billTimeType == 5">
+                <if test="atTime != null">
+                    and to_days(b.billTime) =to_days(#{atTime})
+                </if>
+            </when>
+            <when test="billTimeType == 6">
+                <if test="atTime != null">
+                    and to_days(b.billTime) &gt;= to_days(#{atTime})
+                </if>
+
+            </when>
+            <when test="billTimeType == 7">
+                <if test="atTime != null">
+                    and to_days(b.billTime) &lt;= to_days(#{atTime})
+                </if>
+            </when>
+            <when test="billTimeType == 8">
+                <if test="startTime != null">
+                    and (to_days(b.billTime) &gt;= to_days(#{startTime})
+                </if>
+                <if test="endTime != null">
+                    and to_days(b.billTime) &gt;= to_days(#{endTime}))
+                </if>
+            </when>
+            <when test="billTimeType == 9">
+                and year(b.billTime)=year(now())
+            </when>
+        </choose>
+    </sql>
+    <select id="findBillPO" resultType="com.hcb.newBilly.po.BillPO">
+        SELECT b.*
+        ,b.inOutStatus `inOutStatusD.dicId`
+        ,b.useFor `useForD.dicId`
+        FROM bill b
+        WHERE b.dataStatus = 1 and b.operator =#{operator}
+        <if test="inOutStatus != null and inOutStatus != ''">
+            and b.inOutStatus=#{inOutStatus}
+        </if>
+        <if test="useFor != null and useFor != ''">
+            and b.useFor=#{useFor}
+        </if>
+        <include refid="timeSql"/>
+        order by b.billTime desc
+    </select>
+    <select id="getBillById" resultType="com.hcb.newBilly.po.BillPO">
+        select * from bill where billId = #{billId}
+    </select>
+</mapper>

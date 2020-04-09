@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hcb.newBilly.dao.MenuDao">
+
+    <insert id="saveMenu">
+        insert into menu (menuId, menuName, parentId, addr, tag, `order`, dataStatus) values
+        (#{menuId}, #{menuName}, #{parentId}, #{addr}, #{tag}, #{order}, 1)
+    </insert>
+    <update id="updateMenu">
+        update menu
+        <set>
+            <if test="menuName != null and menuName != ''">
+                menuName=#{menuName},
+            </if>
+            <if test="parentId != null and parentId != ''">
+                parentId=#{parentId},
+            </if>
+            <if test="addr != null and addr != ''">
+                addr=#{addr},
+            </if>
+            <if test="tag != null and tag != ''">
+                tag=#{tag},
+            </if>
+            <if test="order != null and order != ''">
+                `order`=#{order},
+            </if>
+        </set>
+        where menuId=#{menuId}
+    </update>
+    <update id="deleteMenu">
+        update menu set dataStatus=3 where menuId=#{menuId}
+    </update>
+    <select id="findMenu" resultType="com.hcb.newBilly.po.MenuPO">
+        select * from menu where dataStatus=1
+    </select>
+
+
+    <select id="findMenuByParentId" resultType="com.hcb.newBilly.po.MenuPO">
+        select * from menu where parentId=#{parentId} and dataStatus=1
+    </select>
+    <select id="checkUpdate" resultType="java.lang.Integer">
+        select count(1) from menu where parentId=#{parentId} and dataStatus=1 and menuName=#{menuName} and menuId !=#{menuId}
+    </select>
+</mapper>

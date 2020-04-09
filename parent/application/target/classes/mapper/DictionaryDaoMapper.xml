@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hcb.newBilly.dao.DictionaryDao">
+
+    <update id="deleteDictionary">
+        update dictionary set dataStatus=3 where dicId = #{dicContentId}
+    </update>
+    <select id="findDictionaryByEnName" resultType="com.hcb.newBilly.po.DictionaryPO">
+        select * from dictionary
+        where dataStatus=1
+        <if test="enName != null and enName != ''">
+            and dictionaryEn=#{enName}
+        </if>
+        and owner in ('public',#{userId})
+    </select>
+    <select id="checkRepeate" resultType="java.lang.Integer">
+        select count(1) from dictionary where dataStatus=1 and dictionaryEn=#{enName} and dictionaryContent=#{content}
+        <if test="dicId != null and dicId != ''">
+             and dicId !=#{dicId}
+        </if>
+    </select>
+    <select id="getDictionaryById" resultType="com.hcb.newBilly.vo.DictionaryVO">
+        select dicId dicId,dictionaryContent dictionaryContent from dictionary where dicId=#{dicId}
+    </select>
+
+    <insert id="saveDictionary">
+        insert into dictionary (dicId, dictionaryEn, dictionaryContent, changeAble, owner, dataStatus)
+         values (#{dicId},#{dictionaryEn},#{dictionaryContent},1,#{owner},1)
+    </insert>
+
+    <update id="updateDictionary">
+        update dictionary
+        <set>
+            <if test="dictionaryEn != null and dictionaryEn != ''">
+                dictionaryEn=#{dictionaryEn},
+            </if>
+            <if test="dictionaryContent != null and dictionaryContent != ''">
+                dictionaryContent=#{dictionaryContent},
+            </if>
+        </set>
+        where dicId=#{dicId}
+    </update>
+
+</mapper>

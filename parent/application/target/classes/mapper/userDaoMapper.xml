@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hcb.newBilly.dao.UserDao">
+
+    <insert id="saveUser" parameterType="com.hcb.newBilly.po.UserPO">
+       insert into `user` (userId, userAccount, userName, password, createTime, updateTime, dataStatus) values
+       (#{userId},#{userAccount},#{userName},#{password},#{createTime},#{updateTime},1)
+    </insert>
+    <update id="updateUser" parameterType="com.hcb.newBilly.po.UserPO">
+        update `user`
+        <set>
+            <if test="userAccount != null">
+                userAccount=#{userAccount},
+            </if>
+            <if test="userName != null">
+                userName=#{userName},
+            </if>
+            <if test="password != null">
+                password=#{password},
+            </if>
+            <if test="updateTime != null">
+                updateTime=#{updateTime},
+            </if>
+            where userId=#{userId}
+        </set>
+    </update>
+    <update id="updatePassword">
+        update `user` set password=#{password} where userAccount=#{userAccount}
+    </update>
+    <select id="getUserByUserAccount" resultType="com.hcb.newBilly.po.UserPO">
+        select * from user where userAccount=#{userAccount} and dataStatus=1
+    </select>
+    <select id="findUserByUserName" resultType="com.hcb.newBilly.po.UserPO">
+        select * from user
+        where dataStatus=1
+        <if test="userName != null and userName != ''">
+           and  userName=#{userName}
+        </if>
+    </select>
+    <insert id="saveAnswer">
+        insert into problemcheck (pcId,userId,problemId,answer) values
+         (#{pcId},#{userId},#{problemId},#{answer})
+    </insert>
+
+    <select id="getAnswer" resultType="java.lang.String">
+        select answer from problemcheck where userId =#{userId} and problemId=#{problemId}
+    </select>
+
+
+</mapper>

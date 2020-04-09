@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hcb.newBilly.dao.BillStaticsDao">
+
+    <select id="findTimeSumStatics" resultType="com.hcb.newBilly.vo.TimeSumStaticsVO">
+        select
+        sum(sum) `sum` ,
+        count(1) `count`,
+        <choose>
+            <when test="timeType == 1">
+                YEAR(billTime) `time`
+            </when>
+            <when test="timeType == 2">
+                MONTH(billTime) `time`
+            </when>
+            <when test="timeType == 3">
+                DAY(billTime) `time`
+            </when>
+        </choose>
+        from bill
+        where dataStatus = 1 and operator = #{operator}
+        <if test="inOutStatus != null and inOutStatus != ''">
+            and inOutStatus =#{inOutStatus}
+        </if>
+        <if test="useFor != null and useFor != ''">
+            and useFor =#{useFor}
+        </if>
+        <choose>
+            <when test="timeType == 1">
+                GROUP BY YEAR(billTime) order by YEAR(billTime)
+            </when>
+            <when test="timeType == 2">
+                and YEAR(billTime)=YEAR(#{time}) GROUP BY MONTH(billTime) order by MONTH(billTime)
+            </when>
+            <when test="timeType == 3">
+                and YEAR(billTime)=YEAR(#{time}) and MONTH(billTime)=MONTH(#{time}) GROUP BY DAY(billTime) order by
+                DAY(billTime)
+            </when>
+        </choose>
+    </select>
+    <select id="getTimeSum" resultType="java.lang.Double">
+        select
+        sum(sum) `sum`
+        from bill
+        where dataStatus = 1 and operator=#{operator}
+        <if test="inOutStatus != null and inOutStatus != ''">
+            and inOutStatus =#{inOutStatus}
+        </if>
+        <if test="useFor != null and useFor != ''">
+            and useFor =#{useFor}
+        </if>
+        <choose>
+            <when test="timeType == 1">
+                GROUP BY YEAR(billTime)
+            </when>
+            <when test="timeType == 2">
+                and YEAR(billTime)=YEAR(#{time})
+            </when>
+            <when test="timeType == 3">
+                and YEAR(billTime)=YEAR(#{time}) and MONTH(billTime)=MONTH(#{time})
+            </when>
+        </choose>
+    </select>
+    <sql id="timeSql">
+        <choose>
+            <when test="billTimeType == 1">
+                and to_days(b.billTime) = to_days(now())
+            </when>
+            <when test="billTimeType == 2">
+                and to_days(now())-to_days(b.billTime) = 1
+            </when>
+            <when test="billTimeType == 3">
+                and YEARWEEK(date_format(billTime,'%Y-%m-%d')) = YEARWEEK(now())
+            </when>
+            <when test="billTimeType == 4">
+                and DATE_FORMAT( b.billTime,'%Y%m') = DATE_FORMAT( CURDATE(),'%Y%m')
+            </when>
+            <when test="billTimeType == 5">
+                <if test="atTime != null">
+                    and to_days(b.billTime) =to_days(#{atTime})
+                </if>
+            </when>
+            <when test="billTimeType == 6">
+                <if test="atTime != null">
+                    and to_days(b.billTime) &gt;= to_days(#{atTime})
+                </if>
+
+            </when>
+            <when test="billTimeType == 7">
+                <if test="atTime != null">
+                    and to_days(b.billTime) &lt;= to_days(#{atTime})
+                </if>
+            </when>
+            <when test="billTimeType == 8">
+                <if test="startTime != null">
+                    and (to_days(b.billTime) &gt;= to_days(#{startTime})
+                </if>
+                <if test="endTime != null">
+                    and to_days(b.billTime) &gt;= to_days(#{endTime}))
+                </if>
+            </when>
+            <when test="billTimeType == 9">
+                and year(b.billTime)=year(now())
+            </when>
+        </choose>
+    </sql>
+    <select id="findDicSumCountStatics" resultType="com.hcb.newBilly.vo.DicStaticsVO">
+        select
+        count(1) `count`,
+        sum(`sum`) `sum`,
+        useFor `dicContentVO.dicId`
+        from bill b where b.dataStatus=1 and b.operator = #{operator}
+        <if test="inOutStatus != null and inOutStatus != ''">
+            and b.inOutStatus =#{inOutStatus}
+        </if>
+        <include refid="timeSql"/>
+        group by b.useFor
+    </select>
+
+    <select id="findTypeBills" resultType="com.hcb.newBilly.po.BillPO">
+        SELECT b.*
+        ,b.inOutStatus `inOutStatusD.dicId`
+        ,b.useFor `useForD.dicId`
+        FROM bill b
+        WHERE b.dataStatus = 1 and b.operator=#{operator}
+        <if test="inOutStatus != null and inOutStatus != ''">
+            and b.inOutStatus=#{inOutStatus}
+        </if>
+        <if test="useFor != null and useFor != ''">
+            and b.useFor=#{useFor}
+        </if>
+        <include refid="timeSql"/>
+        order by b.billTime desc
+    </select>
+    <select id="findByTime" resultType="com.hcb.newBilly.po.BillPO">
+        SELECT b.*
+        ,b.inOutStatus `inOutStatusD.dicId`
+        ,b.useFor `useForD.dicId`
+        FROM bill b
+        where b.dataStatus = 1 and b.operator = #{operator}
+        <if test="inOutStatus != null and inOutStatus != ''">
+            and b.inOutStatus =#{inOutStatus}
+        </if>
+        <if test="useFor != null and useFor != ''">
+            and b.useFor =#{useFor}
+        </if>
+        <choose>
+            <when test="timeType == 1">
+                and YEAR(billTime)=YEAR(#{time})
+            </when>
+            <when test="timeType == 2">
+                and (YEAR(billTime)=YEAR(#{time}) and MONTH(billTime)=MONTH(#{time}))
+            </when>
+            <when test="timeType == 3">
+                and (YEAR(billTime)=YEAR(#{time}) and MONTH(billTime)=MONTH(#{time}) and DAY(billTime)=DAY(#{time}))
+            </when>
+        </choose>
+        order by b.billTime desc
+    </select>
+</mapper>
